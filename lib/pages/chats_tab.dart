@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../services/ble_chat_v10.dart';
 import '../theme/app_theme.dart';
 import '../widgets/edit_name_dialog.dart';
@@ -22,18 +23,14 @@ class ChatsTab extends StatelessWidget {
         Expanded(
           child: peer == null
               ? _EmptyChats(ble: ble)
-              : _ConnectedChatsList(
-                  ble: ble,
-                  peer: peer,
-                  lastMsg: lastMsg,
-                ),
+              : _ConnectedChatsList(ble: ble, peer: peer, lastMsg: lastMsg),
         ),
       ],
     );
   }
 }
 
-// ── Header ──────────────────────────────────────────────────────────────────
+// ── Header ────────────────────────────────────────────────────────────────────
 
 class _ChatsHeader extends StatelessWidget {
   final BleChatV10Controller ble;
@@ -49,6 +46,7 @@ class _ChatsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(
@@ -65,21 +63,23 @@ class _ChatsHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'BLE Mesh Chat',
+                  l.chatsHeaderTitle,
                   style: AppTextStyle.xl.copyWith(color: AppColors.gray900),
                 ),
                 const SizedBox(height: 6),
-                // Tên thiết bị — tap để đổi tên
                 GestureDetector(
                   onTap: () => _editName(context),
                   behavior: HitTestBehavior.opaque,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        ble.nodeName,
-                        style: AppTextStyle.semibold.copyWith(
-                          color: AppColors.indigo600,
+                      Flexible(
+                        child: Text(
+                          ble.nodeName,
+                          style: AppTextStyle.semibold.copyWith(
+                            color: AppColors.indigo600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -96,8 +96,10 @@ class _ChatsHeader extends StatelessWidget {
               ],
             ),
           ),
-          // Nút đổi tên
-          _EditNameButton(onTap: () => _editName(context)),
+          _EditNameButton(
+            label: l.chatsRename,
+            onTap: () => _editName(context),
+          ),
         ],
       ),
     );
@@ -105,8 +107,9 @@ class _ChatsHeader extends StatelessWidget {
 }
 
 class _EditNameButton extends StatelessWidget {
+  final String label;
   final VoidCallback onTap;
-  const _EditNameButton({required this.onTap});
+  const _EditNameButton({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -125,10 +128,14 @@ class _EditNameButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.badge_outlined, size: 15, color: AppColors.indigo600),
+            const Icon(
+              Icons.badge_outlined,
+              size: 15,
+              color: AppColors.indigo600,
+            ),
             const SizedBox(width: 4),
             Text(
-              'Đổi tên',
+              label,
               style: AppTextStyle.sm.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.indigo600,
@@ -141,7 +148,7 @@ class _EditNameButton extends StatelessWidget {
   }
 }
 
-// ── Empty state ──────────────────────────────────────────────────────────────
+// ── Empty state ───────────────────────────────────────────────────────────────
 
 class _EmptyChats extends StatelessWidget {
   final BleChatV10Controller ble;
@@ -149,6 +156,7 @@ class _EmptyChats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -170,12 +178,12 @@ class _EmptyChats extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Chưa có cuộc trò chuyện',
+              l.chatsEmptyTitle,
               style: AppTextStyle.lg.copyWith(color: AppColors.gray800),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Vào tab Network để tìm và kết nối với điện thoại gần đây.',
+              l.chatsEmptySubtitle,
               style: AppTextStyle.bodyMuted,
               textAlign: TextAlign.center,
             ),
@@ -186,7 +194,7 @@ class _EmptyChats extends StatelessWidget {
   }
 }
 
-// ── Connected chat entry ─────────────────────────────────────────────────────
+// ── Connected chat entry ──────────────────────────────────────────────────────
 
 class _ConnectedChatsList extends StatelessWidget {
   final BleChatV10Controller ble;
@@ -210,13 +218,14 @@ class _ConnectedChatsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return ListView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
       children: [
-        // ── Chat card ──────────────────────────────────────────────
+        // ── Chat card ─────────────────────────────────────────────
         GestureDetector(
           onTap: () => _openChat(context),
           child: Container(
@@ -277,16 +286,19 @@ class _ConnectedChatsList extends StatelessWidget {
                             ),
                           ),
                           if (lastMsg != null)
-                            Text(_fmt(lastMsg!.time), style: AppTextStyle.labelMuted),
+                            Text(
+                              _fmt(lastMsg!.time),
+                              style: AppTextStyle.labelMuted,
+                            ),
                         ],
                       ),
                       const SizedBox(height: 3),
                       Text(
                         lastMsg != null
                             ? (lastMsg!.mine
-                                  ? 'Bạn: ${lastMsg!.text}'
+                                  ? l.chatsMine(lastMsg!.text)
                                   : lastMsg!.text)
-                            : 'Connected • direct BLE',
+                            : l.chatsConnectedBle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTextStyle.bodyMuted,
@@ -337,7 +349,7 @@ class _ConnectedChatsList extends StatelessWidget {
 
         const SizedBox(height: AppSpacing.md),
 
-        // ── Open chat button ───────────────────────────────────────
+        // ── Open chat button ──────────────────────────────────────
         FilledButton.icon(
           onPressed: () => _openChat(context),
           icon: ble.unreadCount > 0
@@ -348,8 +360,8 @@ class _ConnectedChatsList extends StatelessWidget {
               : const Icon(Icons.chat_rounded, size: 18),
           label: Text(
             ble.unreadCount > 0
-                ? 'Mở chat  •  ${ble.unreadCount} tin mới'
-                : 'Mở chat',
+                ? l.chatsOpenChatUnread(ble.unreadCount)
+                : l.chatsOpenChat,
           ),
           style: FilledButton.styleFrom(
             minimumSize: const Size(double.infinity, 48),

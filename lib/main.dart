@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n/app_localizations.dart';
+import 'l10n/l10n.dart';
 import 'pages/chat_page.dart';
 import 'pages/chats_tab.dart';
 import 'pages/network_tab.dart';
@@ -19,8 +23,37 @@ void main() {
 //  Root app
 // ─────────────────────────────────────────────
 
-class MeshChatApp extends StatelessWidget {
+class MeshChatApp extends StatefulWidget {
   const MeshChatApp({super.key});
+
+  /// Allows any descendant to change the app locale.
+  static void setLocale(BuildContext context, Locale? locale) {
+    context.findAncestorStateOfType<_MeshChatAppState>()?.setLocale(locale);
+  }
+
+  @override
+  State<MeshChatApp> createState() => _MeshChatAppState();
+}
+
+class _MeshChatAppState extends State<MeshChatApp> {
+  // null = follow system locale
+  Locale? _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLocale();
+  }
+
+  Future<void> _loadSavedLocale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString('app_locale');
+    if (code != null && mounted) {
+      setState(() => _locale = Locale(code));
+    }
+  }
+
+  void setLocale(Locale? locale) => setState(() => _locale = locale);
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +62,17 @@ class MeshChatApp extends StatelessWidget {
       title: 'BLE Mesh Chat',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      locale: _locale,
+      localizationsDelegates: const [
+        AppL10n.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('vi'),
+        Locale('en'),
+      ],
       home: const HomePage(),
     );
   }
@@ -116,6 +160,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showMessageSnackBar(V10ChatMessage message) {
+    final l = context.l10n;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -153,7 +198,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      ble.connectedName ?? 'Tin nhắn mới',
+                      ble.connectedName ?? l.newMessage,
                       style: AppTextStyle.semibold.copyWith(
                         color: Colors.white,
                         fontSize: 13,
@@ -174,7 +219,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           action: SnackBarAction(
-            label: 'Xem',
+            label: l.snackView,
             textColor: AppColors.indigo100,
             onPressed: () {
               final peer = ble.connectedName;
@@ -244,6 +289,7 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -264,22 +310,22 @@ class _BottomNav extends StatelessWidget {
               label: Text('$unreadCount'),
               child: const Icon(Icons.chat_bubble_rounded),
             ),
-            label: 'Chats',
+            label: l.navChats,
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.devices_outlined),
-            selectedIcon: Icon(Icons.devices_rounded),
-            label: 'Nodes',
+          NavigationDestination(
+            icon: const Icon(Icons.devices_outlined),
+            selectedIcon: const Icon(Icons.devices_rounded),
+            label: l.navNodes,
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.hub_outlined),
-            selectedIcon: Icon(Icons.hub_rounded),
-            label: 'Network',
+          NavigationDestination(
+            icon: const Icon(Icons.hub_outlined),
+            selectedIcon: const Icon(Icons.hub_rounded),
+            label: l.navNetwork,
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings_rounded),
-            label: 'Cài đặt',
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings_rounded),
+            label: l.navSettings,
           ),
         ],
       ),
@@ -297,6 +343,7 @@ class _ConnectionRequestDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -307,7 +354,6 @@ class _ConnectionRequestDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon
             Container(
               width: 56,
               height: 56,
@@ -322,9 +368,8 @@ class _ConnectionRequestDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-
             Text(
-              'Yêu cầu kết nối',
+              l.connectionRequestTitle,
               style: AppTextStyle.lg.copyWith(color: AppColors.gray900),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -340,14 +385,11 @@ class _ConnectionRequestDialog extends StatelessWidget {
                       color: AppColors.gray900,
                     ),
                   ),
-                  const TextSpan(
-                    text: ' muốn kết nối để chat qua BLE.',
-                  ),
+                  TextSpan(text: l.connectionRequestBody),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-
             Row(
               children: [
                 Expanded(
@@ -361,7 +403,7 @@ class _ConnectionRequestDialog extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Text('Từ chối'),
+                    child: Text(l.connectionRequestReject),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -371,7 +413,7 @@ class _ConnectionRequestDialog extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Text('Chấp nhận'),
+                    child: Text(l.connectionRequestAccept),
                   ),
                 ),
               ],

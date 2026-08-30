@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../services/ble_chat_v10.dart';
 import '../theme/app_theme.dart';
 import '../widgets/section_header.dart';
@@ -11,13 +12,14 @@ class NetworkTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       children: [
         SectionHeader(
-          title: 'Network',
+          title: l.networkHeaderTitle,
           subtitle: ble.scanning
-              ? 'Đang quét  •  ${ble.phones.length} thiết bị'
-              : 'Tìm điện thoại quảng bá BLE Mesh',
+              ? l.networkScanningSubtitle(ble.phones.length)
+              : l.networkIdleSubtitle,
           actions: [
             _ScanButton(
               scanning: ble.scanning,
@@ -27,12 +29,8 @@ class NetworkTab extends StatelessWidget {
           ],
         ),
         const Divider(),
-
-        // ── Error banner ───────────────────────────────────────────
         if (ble.error != null)
           _ErrorBanner(message: ble.error!, onDismiss: ble.clearError),
-
-        // ── Device list ────────────────────────────────────────────
         Expanded(
           child: ble.phones.isEmpty
               ? _EmptyNetwork(scanning: ble.scanning, onScan: ble.startScan)
@@ -59,7 +57,7 @@ class NetworkTab extends StatelessWidget {
   }
 }
 
-// ── Scan button ──────────────────────────────────────────────────────────────
+// ── Scan button ───────────────────────────────────────────────────────────────
 
 class _ScanButton extends StatelessWidget {
   final bool scanning;
@@ -73,6 +71,7 @@ class _ScanButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return GestureDetector(
       onTap: scanning ? onStop : onStart,
       child: Container(
@@ -84,7 +83,9 @@ class _ScanButton extends StatelessWidget {
           color: scanning ? AppColors.red100 : AppColors.indigo50,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color: scanning ? AppColors.red500.withAlpha(60) : AppColors.indigo100,
+            color: scanning
+                ? AppColors.red500.withAlpha(60)
+                : AppColors.indigo100,
           ),
         ),
         child: Row(
@@ -100,14 +101,10 @@ class _ScanButton extends StatelessWidget {
                 ),
               )
             else
-              const Icon(
-                Icons.radar_rounded,
-                size: 15,
-                color: AppColors.indigo600,
-              ),
+              const Icon(Icons.radar_rounded, size: 15, color: AppColors.indigo600),
             const SizedBox(width: 5),
             Text(
-              scanning ? 'Dừng' : 'Quét',
+              scanning ? l.networkScanStop : l.networkScanStart,
               style: AppTextStyle.sm.copyWith(
                 fontWeight: FontWeight.w600,
                 color: scanning ? AppColors.red700 : AppColors.indigo600,
@@ -120,7 +117,7 @@ class _ScanButton extends StatelessWidget {
   }
 }
 
-// ── Error banner ─────────────────────────────────────────────────────────────
+// ── Error banner ──────────────────────────────────────────────────────────────
 
 class _ErrorBanner extends StatelessWidget {
   final String message;
@@ -147,7 +144,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, size: 16, color: AppColors.red700),
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 16,
+            color: AppColors.red700,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -159,7 +160,11 @@ class _ErrorBanner extends StatelessWidget {
           ),
           GestureDetector(
             onTap: onDismiss,
-            child: const Icon(Icons.close_rounded, size: 16, color: AppColors.red700),
+            child: const Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: AppColors.red700,
+            ),
           ),
         ],
       ),
@@ -167,7 +172,7 @@ class _ErrorBanner extends StatelessWidget {
   }
 }
 
-// ── Empty state ──────────────────────────────────────────────────────────────
+// ── Empty state ───────────────────────────────────────────────────────────────
 
 class _EmptyNetwork extends StatelessWidget {
   final bool scanning;
@@ -176,6 +181,7 @@ class _EmptyNetwork extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -199,12 +205,12 @@ class _EmptyNetwork extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              scanning ? 'Đang tìm kiếm…' : 'Chưa thấy thiết bị nào',
+              scanning ? l.networkScanningTitle : l.networkEmptyTitle,
               style: AppTextStyle.lg.copyWith(color: AppColors.gray800),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Điện thoại kia phải cài app này, bật Bluetooth và đang quảng bá BLE Mesh.',
+              l.networkEmptyHint,
               style: AppTextStyle.bodyMuted,
               textAlign: TextAlign.center,
             ),
@@ -213,7 +219,7 @@ class _EmptyNetwork extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onScan,
                 icon: const Icon(Icons.radar_rounded, size: 18),
-                label: const Text('Bắt đầu quét'),
+                label: Text(l.networkStartScan),
               ),
             ] else ...[
               const SizedBox(height: AppSpacing.lg),
@@ -233,34 +239,29 @@ class _EmptyNetwork extends StatelessWidget {
   }
 }
 
-// ── Phone card ───────────────────────────────────────────────────────────────
+// ── Phone card ────────────────────────────────────────────────────────────────
 
 class _PhoneCard extends StatelessWidget {
   final BleChatV10Controller ble;
   final DiscoveredPhone phone;
   const _PhoneCard({required this.ble, required this.phone});
 
-  // RSSI → signal strength label + color
-  ({String label, Color color, Color bg}) _signal(int rssi) {
+  ({String label, Color color, Color bg}) _signal(
+    int rssi,
+    AppL10n l,
+  ) {
     if (rssi >= -60) {
-      return (
-        label: 'Mạnh',
-        color: AppColors.green700,
-        bg: AppColors.green100,
-      );
+      return (label: l.networkSignalStrong, color: AppColors.green700, bg: AppColors.green100);
     } else if (rssi >= -75) {
-      return (
-        label: 'Trung bình',
-        color: AppColors.amber700,
-        bg: AppColors.amber100,
-      );
+      return (label: l.networkSignalMedium, color: AppColors.amber700, bg: AppColors.amber100);
     }
-    return (label: 'Yếu', color: AppColors.red700, bg: AppColors.red100);
+    return (label: l.networkSignalWeak, color: AppColors.red700, bg: AppColors.red100);
   }
 
   @override
   Widget build(BuildContext context) {
-    final sig = _signal(phone.rssi);
+    final l = context.l10n;
+    final sig = _signal(phone.rssi, l);
 
     return Container(
       decoration: BoxDecoration(
@@ -275,27 +276,20 @@ class _PhoneCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            // Avatar
             Container(
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: phone.connected
-                    ? AppColors.indigo100
-                    : AppColors.gray100,
+                color: phone.connected ? AppColors.indigo100 : AppColors.gray100,
                 borderRadius: BorderRadius.circular(AppRadius.full),
               ),
               child: Icon(
                 Icons.smartphone_rounded,
-                color: phone.connected
-                    ? AppColors.indigo600
-                    : AppColors.gray500,
+                color: phone.connected ? AppColors.indigo600 : AppColors.gray500,
                 size: 24,
               ),
             ),
             const SizedBox(width: AppSpacing.sm + 4),
-
-            // Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,27 +301,22 @@ class _PhoneCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      // Signal badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: sig.bg,
-                          borderRadius: BorderRadius.circular(AppRadius.full),
-                        ),
-                        child: Text(
-                          '${sig.label}  ${phone.rssi} dBm',
-                          style: AppTextStyle.xs.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: sig.color,
-                          ),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: sig.bg,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Text(
+                      '${sig.label}  ${phone.rssi} dBm',
+                      style: AppTextStyle.xs.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: sig.color,
                       ),
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -340,8 +329,6 @@ class _PhoneCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-
-            // Action button
             _ActionButton(ble: ble, phone: phone),
           ],
         ),
@@ -357,22 +344,34 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+
     if (phone.connecting) {
       return Container(
-        width: 80,
+        width: 88,
         height: 36,
         decoration: BoxDecoration(
           color: AppColors.gray100,
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        child: const Center(
-          child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.indigo500,
-            ),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.indigo500,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l.networkConnecting,
+                style: AppTextStyle.xs.copyWith(color: AppColors.gray500),
+              ),
+            ],
           ),
         ),
       );
@@ -391,7 +390,7 @@ class _ActionButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           minimumSize: const Size(80, 36),
         ),
-        child: const Text('Chat', style: TextStyle(fontSize: 13)),
+        child: Text(l.networkOpenChat, style: const TextStyle(fontSize: 13)),
       );
     }
 
@@ -406,7 +405,7 @@ class _ActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         minimumSize: const Size(80, 36),
       ),
-      child: const Text('Kết nối', style: TextStyle(fontSize: 13)),
+      child: Text(l.networkConnect, style: const TextStyle(fontSize: 13)),
     );
   }
 }

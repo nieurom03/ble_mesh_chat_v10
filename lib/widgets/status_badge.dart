@@ -1,6 +1,7 @@
 import 'package:bluetooth_low_energy/bluetooth_low_energy.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/app_theme.dart';
 
 /// Small pill badge showing Bluetooth state.
@@ -12,6 +13,9 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    final label = _on ? l.btOn : l.btOff;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -34,7 +38,7 @@ class StatusBadge extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           Text(
-            _on ? 'BT On' : state.name,
+            label,
             style: AppTextStyle.xs.copyWith(
               fontWeight: FontWeight.w600,
               color: _on ? AppColors.green700 : AppColors.gray500,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../theme/app_theme.dart';
 
 /// Dialog cho phép người dùng đổi tên thiết bị trong Mesh.
@@ -26,23 +27,34 @@ class _EditNameDialogState extends State<EditNameDialog> {
     super.dispose();
   }
 
-  void _submit() => Navigator.pop(context, _ctrl.text.trim());
+  void _submit() {
+    final text = _ctrl.text.trim();
+    if (text.isNotEmpty) Navigator.pop(context, text);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       backgroundColor: Colors.white,
-      child: Padding(
+      // insetPadding đảm bảo dialog không bị keyboard che
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xl,
+      ),
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Icon + title ──────────────────────────────────────
+            // ── Icon + title ────────────────────────────────────
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: 40,
@@ -58,27 +70,31 @@ class _EditNameDialogState extends State<EditNameDialog> {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tên trong Mesh',
-                      style: AppTextStyle.semibold.copyWith(
-                        fontSize: 16,
-                        color: AppColors.gray900,
+                // Expanded để title/subtitle không tràn ngang
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.editNameTitle,
+                        style: AppTextStyle.semibold.copyWith(
+                          fontSize: 16,
+                          color: AppColors.gray900,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Hiển thị với người kết nối',
-                      style: AppTextStyle.bodyMuted,
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        l.editNameSubtitle,
+                        style: AppTextStyle.bodyMuted,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // ── Input ─────────────────────────────────────────────
+            // ── Input ───────────────────────────────────────────
             TextField(
               controller: _ctrl,
               autofocus: true,
@@ -87,7 +103,7 @@ class _EditNameDialogState extends State<EditNameDialog> {
               onSubmitted: (_) => _submit(),
               style: AppTextStyle.base.copyWith(color: AppColors.gray900),
               decoration: InputDecoration(
-                hintText: 'Ví dụ: iPhone của Nam',
+                hintText: l.editNameHint,
                 counterText: '',
                 suffixText: '${_ctrl.text.length}/20',
                 suffixStyle: AppTextStyle.labelMuted,
@@ -96,7 +112,7 @@ class _EditNameDialogState extends State<EditNameDialog> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // ── Actions ───────────────────────────────────────────
+            // ── Actions ─────────────────────────────────────────
             Row(
               children: [
                 Expanded(
@@ -112,14 +128,14 @@ class _EditNameDialogState extends State<EditNameDialog> {
                         vertical: AppSpacing.sm + 2,
                       ),
                     ),
-                    child: const Text('Hủy'),
+                    child: Text(l.editNameCancel),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: FilledButton(
                     onPressed: _ctrl.text.trim().isEmpty ? null : _submit,
-                    child: const Text('Lưu'),
+                    child: Text(l.editNameSave),
                   ),
                 ),
               ],

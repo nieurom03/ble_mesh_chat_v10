@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../services/ble_chat_v10.dart';
 import '../theme/app_theme.dart';
 
@@ -57,13 +58,9 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
-      appBar: _ChatAppBar(
-        peerName: widget.peerName,
-        connected: connected,
-      ),
+      appBar: _ChatAppBar(peerName: widget.peerName, connected: connected),
       body: Column(
         children: [
-          // ── Message list ───────────────────────────────────────
           Expanded(
             child: messages.isEmpty
                 ? _EmptyChat(peerName: widget.peerName)
@@ -87,16 +84,8 @@ class _ChatPageState extends State<ChatPage> {
                     },
                   ),
           ),
-
-          // ── Disconnected banner ────────────────────────────────
           if (!connected) const _DisconnectedBanner(),
-
-          // ── Input bar ──────────────────────────────────────────
-          _InputBar(
-            controller: _input,
-            enabled: connected,
-            onSend: _send,
-          ),
+          _InputBar(controller: _input, enabled: connected, onSend: _send),
         ],
       ),
     );
@@ -112,7 +101,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 }
 
-// ── AppBar ───────────────────────────────────────────────────────────────────
+// ── AppBar ────────────────────────────────────────────────────────────────────
 
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String peerName;
@@ -124,6 +113,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
@@ -131,7 +121,6 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Row(
         children: [
-          // Avatar
           Container(
             width: 34,
             height: 34,
@@ -164,11 +153,13 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                     margin: const EdgeInsets.only(right: 4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: connected ? AppColors.green500 : AppColors.gray400,
+                      color: connected
+                          ? AppColors.green500
+                          : AppColors.gray400,
                     ),
                   ),
                   Text(
-                    connected ? 'Connected via BLE' : 'Disconnected',
+                    connected ? l.chatConnected : l.chatDisconnected,
                     style: AppTextStyle.xs.copyWith(
                       color: connected
                           ? AppColors.green700
@@ -185,7 +176,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-// ── Message bubble ───────────────────────────────────────────────────────────
+// ── Message bubble ────────────────────────────────────────────────────────────
 
 class _MessageBubble extends StatelessWidget {
   final V10ChatMessage message;
@@ -215,7 +206,6 @@ class _MessageBubble extends StatelessWidget {
             mine ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Peer avatar (only on first in a group)
           if (!mine)
             SizedBox(
               width: 28,
@@ -237,8 +227,6 @@ class _MessageBubble extends StatelessWidget {
                   : const SizedBox(width: 34),
             ),
           if (!mine) const SizedBox(width: 6),
-
-          // Bubble
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(
@@ -253,9 +241,7 @@ class _MessageBubble extends StatelessWidget {
                   bottomLeft: Radius.circular(mine ? AppRadius.lg : 4),
                   bottomRight: Radius.circular(mine ? 4 : AppRadius.lg),
                 ),
-                border: mine
-                    ? null
-                    : Border.all(color: AppColors.gray200),
+                border: mine ? null : Border.all(color: AppColors.gray200),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(10),
@@ -294,7 +280,7 @@ class _MessageBubble extends StatelessWidget {
   }
 }
 
-// ── Empty chat ───────────────────────────────────────────────────────────────
+// ── Empty chat ────────────────────────────────────────────────────────────────
 
 class _EmptyChat extends StatelessWidget {
   final String peerName;
@@ -302,6 +288,7 @@ class _EmptyChat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -321,12 +308,12 @@ class _EmptyChat extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Say hi to $peerName!',
+            l.chatEmptyTitle(peerName),
             style: AppTextStyle.lg.copyWith(color: AppColors.gray700),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Tin nhắn gửi trực tiếp qua BLE,\nkhông qua internet.',
+            l.chatEmptySubtitle,
             style: AppTextStyle.bodyMuted,
             textAlign: TextAlign.center,
           ),
@@ -343,6 +330,7 @@ class _DisconnectedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -353,10 +341,14 @@ class _DisconnectedBanner extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.link_off_rounded, size: 15, color: AppColors.amber700),
+          const Icon(
+            Icons.link_off_rounded,
+            size: 15,
+            color: AppColors.amber700,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Text(
-            'Đã mất kết nối BLE',
+            l.chatDisconnectedBanner,
             style: AppTextStyle.sm.copyWith(
               fontWeight: FontWeight.w600,
               color: AppColors.amber700,
@@ -382,6 +374,7 @@ class _InputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return SafeArea(
       top: false,
       child: Container(
@@ -402,7 +395,8 @@ class _InputBar extends StatelessWidget {
                 onSubmitted: enabled ? (_) => onSend() : null,
                 style: AppTextStyle.base.copyWith(color: AppColors.gray900),
                 decoration: InputDecoration(
-                  hintText: enabled ? 'Nhắn tin…' : 'Không có kết nối',
+                  hintText:
+                      enabled ? l.chatInputHint : l.chatInputDisabledHint,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
@@ -428,7 +422,6 @@ class _InputBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
-            // Send button
             GestureDetector(
               onTap: enabled ? onSend : null,
               child: AnimatedContainer(

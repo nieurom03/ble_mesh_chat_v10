@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../services/ble_chat_v10.dart';
 import '../theme/app_theme.dart';
 import '../widgets/edit_name_dialog.dart';
@@ -19,27 +20,32 @@ class NodesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Column(
       children: [
         SectionHeader(
-          title: 'Nodes',
-          subtitle: 'Thiết bị BLE đã kết nối / nhìn thấy',
+          title: l.nodesHeaderTitle,
+          subtitle: l.nodesHeaderSubtitle,
         ),
         const Divider(),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              // ── Local device card ─────────────────────────────────
+              // ── Local device card ──────────────────────────────
               _NodeCard(
                 icon: Icons.phone_android_rounded,
                 iconBg: AppColors.indigo100,
                 iconColor: AppColors.indigo600,
                 title: ble.nodeName,
                 subtitle: ble.nodeId,
-                tag: ble.advertising ? 'Advertising' : 'Offline',
-                tagColor: ble.advertising ? AppColors.green700 : AppColors.gray500,
-                tagBg: ble.advertising ? AppColors.green100 : AppColors.gray100,
+                tag: ble.advertising ? l.nodesTagAdvertising : l.nodesTagOffline,
+                tagColor: ble.advertising
+                    ? AppColors.green700
+                    : AppColors.gray500,
+                tagBg: ble.advertising
+                    ? AppColors.green100
+                    : AppColors.gray100,
                 trailing: GestureDetector(
                   onTap: () => _editName(context),
                   child: Container(
@@ -62,7 +68,7 @@ class NodesTab extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Đổi tên',
+                          l.chatsRename,
                           style: AppTextStyle.sm.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.indigo600,
@@ -74,27 +80,26 @@ class NodesTab extends StatelessWidget {
                 ),
               ),
 
-              // ── Connected peer card ───────────────────────────────
+              // ── Connected peer card ────────────────────────────
               if (ble.connected) ...[
                 const SizedBox(height: AppSpacing.sm),
                 _NodeCard(
                   icon: Icons.bluetooth_connected_rounded,
                   iconBg: AppColors.green100,
                   iconColor: AppColors.green700,
-                  title: ble.connectedName ?? 'Peer',
+                  title: ble.connectedName ?? l.nodesPeer,
                   subtitle: ble.connectedNodeId ?? '—',
-                  tag: 'Connected',
+                  tag: l.nodesTagConnected,
                   tagColor: AppColors.green700,
                   tagBg: AppColors.green100,
                 ),
               ],
 
-              // ── Divider + legend ──────────────────────────────────
               const SizedBox(height: AppSpacing.lg),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
                 child: Text(
-                  'Thiết bị của bạn sẽ xuất hiện với tên trên cho mọi người trong vùng BLE.',
+                  l.nodesLegend,
                   style: AppTextStyle.bodyMuted,
                   textAlign: TextAlign.center,
                 ),
@@ -141,7 +146,6 @@ class _NodeCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Icon
           Container(
             width: 44,
             height: 44,
@@ -152,8 +156,6 @@ class _NodeCard extends StatelessWidget {
             child: Icon(icon, color: iconColor, size: 22),
           ),
           const SizedBox(width: AppSpacing.sm + 4),
-
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +177,6 @@ class _NodeCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 5),
-                // Status tag
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 7,
@@ -196,7 +197,6 @@ class _NodeCard extends StatelessWidget {
               ],
             ),
           ),
-
           if (trailing != null) ...[
             const SizedBox(width: AppSpacing.sm),
             trailing!,
