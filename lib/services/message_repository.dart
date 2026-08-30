@@ -1,3 +1,5 @@
+import 'package:sqflite/sqflite.dart';
+
 import '../models/mesh_message.dart';
 import 'database.dart';
 

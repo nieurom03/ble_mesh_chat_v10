@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:bluetooth_low_energy/bluetooth_low_energy.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -115,9 +116,18 @@ class BleChatV10Controller extends ChangeNotifier {
     // Lấy tên thiết bị thực của máy làm tên mặc định
     String defaultName;
     try {
-      final hostname = Platform.localHostname;
-      // Loại bỏ ".local" suffix nếu có (macOS thường có đuôi này)
-      defaultName = hostname.replaceAll('.local', '');
+      if (Platform.isAndroid) {
+        final info = await DeviceInfoPlugin().androidInfo;
+        // Dùng model máy Android (vd: "Pixel 7", "Samsung S24")
+        defaultName = info.model;
+      } else if (Platform.isIOS) {
+        final info = await DeviceInfoPlugin().iosInfo;
+        // Dùng tên máy iOS người dùng đặt (vd: "iPhone của Nam")
+        defaultName = info.name;
+      } else {
+        final hostname = Platform.localHostname;
+        defaultName = hostname.replaceAll('.local', '');
+      }
       // Giới hạn 20 ký tự
       if (defaultName.length > 20) defaultName = defaultName.substring(0, 20);
     } catch (_) {
