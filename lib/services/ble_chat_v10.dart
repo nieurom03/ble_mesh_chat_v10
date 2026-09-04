@@ -8,6 +8,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/blocked_node.dart';
+
 const kMeshServiceUuid = '8F9E0001-5A4D-4C0A-9B8F-000000000001';
 const kRequestUuid = '8F9E0002-5A4D-4C0A-9B8F-000000000001';
 const kControlUuid = '8F9E0003-5A4D-4C0A-9B8F-000000000001';
@@ -69,6 +71,7 @@ class BleChatV10Controller extends ChangeNotifier {
 
   final List<DiscoveredPhone> phones = [];
   final List<V10ChatMessage> messages = [];
+  final List<BlockedNode> blockedNodes = [];
 
   StreamSubscription? _centralStateSub;
   StreamSubscription? _peripheralStateSub;
@@ -138,6 +141,16 @@ class BleChatV10Controller extends ChangeNotifier {
     await prefs.setString('node_id', nodeId);
     await prefs.setString('node_name', nodeName);
 
+    final blockedJson = prefs.getStringList('blocked_nodes') ?? [];
+    blockedNodes.clear();
+    for (final item in blockedJson) {
+      try {
+        blockedNodes.add(
+          BlockedNode.fromJson(jsonDecode(item) as Map<String, dynamic>),
+        );
+      } catch (_) {}
+    }
+
     _centralStateSub = central.stateChanged.listen((e) {
       bluetoothState = e.state;
       if (e.state == BluetoothLowEnergyState.poweredOn && !advertising) {
@@ -167,6 +180,69 @@ class BleChatV10Controller extends ChangeNotifier {
     );
 
     bluetoothState = central.state;
+    notifyListeners();
+  }
+
+  bool isBlocked(String id, [String? name]) {
+    final lowerId = id.trim().toLowerCase();
+    final lowerName = name?.trim().toLowerCase();
+    return blockedNodes.any((b) {
+      final bId = b.id.trim().toLowerCase();
+      final bName = b.name.trim().toLowerCase();
+      if (bId.isNotEmpty && bId == lowerId) return true;
+      if (lowerName != null &&
+          lowerName.isNotEmpty &&
+          bName.isNotEmpty &&
+          bName == lowerName) {
+        return true;
+      }
+      return false;
+    });
+  }
+
+  Future<void> blockNode(String id, String name) async {
+    final cleanId = id.trim();
+    final cleanName = name.trim().isNotEmpty ? name.trim() : cleanId;
+    if (isBlocked(cleanId, cleanName)) return;
+
+    blockedNodes.add(
+      BlockedNode(id: cleanId, name: cleanName, blockedAt: DateTime.now()),
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'blocked_nodes',
+      blockedNodes.map((b) => jsonEncode(b.toJson())).toList(),
+    );
+
+    // Xoá khỏi danh sách quét nếu đang có
+    phones.removeWhere(
+      (p) =>
+          p.peripheral.uuid.toString().toLowerCase() == cleanId.toLowerCase() ||
+          p.name.toLowerCase() == cleanName.toLowerCase(),
+    );
+
+    // Tự động ngắt kết nối nếu đang kết nối với thiết bị này
+    if (connected &&
+        ((connectedNodeId != null &&
+                connectedNodeId!.toLowerCase() == cleanId.toLowerCase()) ||
+            (connectedName != null &&
+                connectedName!.toLowerCase() == cleanName.toLowerCase()))) {
+      await disconnect();
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> unblockNode(String id) async {
+    final lowerId = id.trim().toLowerCase();
+    blockedNodes.removeWhere((b) => b.id.trim().toLowerCase() == lowerId);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'blocked_nodes',
+      blockedNodes.map((b) => jsonEncode(b.toJson())).toList(),
+    );
     notifyListeners();
   }
 
@@ -339,6 +415,11 @@ class BleChatV10Controller extends ChangeNotifier {
         : 'BLE phone ${e.peripheral.uuid}';
     if (name == nodeName) {
       // Same app name is allowed; UUID is what uniquely identifies the peer.
+    }
+
+    // Bỏ qua nếu thiết bị đã bị chặn
+    if (isBlocked(e.peripheral.uuid.toString(), name)) {
+      return;
     }
 
     final index = phones.indexWhere(
@@ -540,11 +621,17 @@ class BleChatV10Controller extends ChangeNotifier {
     }
     if (_uuidEquals(e.characteristic.uuid, kMessageUuid) &&
         packet['type'] == 'chat') {
+      final from = packet['from']?.toString() ?? 'peer';
+      if (isBlocked(from) ||
+          (_connectedPeripheral != null &&
+              isBlocked(_connectedPeripheral!.uuid.toString()))) {
+        return;
+      }
       final msg = V10ChatMessage(
         id:
             packet['id']?.toString() ??
             DateTime.now().microsecondsSinceEpoch.toString(),
-        fromNodeId: packet['from']?.toString() ?? 'peer',
+        fromNodeId: from,
         text: packet['text']?.toString() ?? '',
         time: DateTime.now(),
         mine: false,
@@ -581,11 +668,34 @@ class BleChatV10Controller extends ChangeNotifier {
 
     if (_uuidEquals(e.characteristic.uuid, kRequestUuid) &&
         packet['type'] == 'connect_request') {
+      final remoteNodeId =
+          packet['nodeId']?.toString() ?? e.central.uuid.toString();
+      final remoteName = packet['name']?.toString() ?? 'BLE phone';
+
+      // Nếu thiết bị bị chặn, tự động phản hồi từ chối và không hiện popup
+      if (isBlocked(remoteNodeId, remoteName) ||
+          isBlocked(e.central.uuid.toString())) {
+        debugPrint(
+          '[BLE-P] Auto-rejecting connection request from blocked device $remoteName ($remoteNodeId)',
+        );
+        unawaited(
+          respondToIncomingRequest(
+            request: IncomingConnectionRequest(
+              central: e.central,
+              remoteNodeId: remoteNodeId,
+              remoteName: remoteName,
+            ),
+            accepted: false,
+          ),
+        );
+        return;
+      }
+
       _incomingCentral = e.central;
       final request = IncomingConnectionRequest(
         central: e.central,
-        remoteNodeId: packet['nodeId']?.toString() ?? e.central.uuid.toString(),
-        remoteName: packet['name']?.toString() ?? 'BLE phone',
+        remoteNodeId: remoteNodeId,
+        remoteName: remoteName,
       );
       debugPrint('[BLE-P] Emitting incomingRequest from ${request.remoteName}');
       _incomingRequestController.add(request);
@@ -594,11 +704,15 @@ class BleChatV10Controller extends ChangeNotifier {
 
     if (_uuidEquals(e.characteristic.uuid, kMessageUuid) &&
         packet['type'] == 'chat') {
+      final from = packet['from']?.toString() ?? e.central.uuid.toString();
+      if (isBlocked(from) || isBlocked(e.central.uuid.toString())) {
+        return;
+      }
       final msg = V10ChatMessage(
         id:
             packet['id']?.toString() ??
             DateTime.now().microsecondsSinceEpoch.toString(),
-        fromNodeId: packet['from']?.toString() ?? e.central.uuid.toString(),
+        fromNodeId: from,
         text: packet['text']?.toString() ?? '',
         time: DateTime.now(),
         mine: false,

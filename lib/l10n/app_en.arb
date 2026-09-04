@@ -91,5 +91,20 @@
   "settingsSectionLanguage": "Language",
   "langVietnamese": "Tiếng Việt",
   "langEnglish": "English",
-  "langSystemDefault": "System default"
+  "langSystemDefault": "System default",
+
+  "settingsSectionPrivacy": "Privacy & Security",
+  "settingsBlockedDevices": "Blocked devices",
+  "settingsBlockedDevicesSub": "Manage hidden devices and blocked messages",
+  "blockedDevicesTitle": "Blocked Devices",
+  "blockedDevicesEmpty": "No blocked devices",
+  "blockedDevicesEmptyHint": "Blocked devices will not appear in scans and cannot send you messages or connection requests.",
+  "blockDevice": "Block device",
+  "unblockDevice": "Unblock",
+  "blockConfirmTitle": "Block {name}?",
+  "blockConfirmMessage": "You will no longer see {name} in the network list and will not receive any messages or connection requests.",
+  "blockAction": "Block",
+  "unblockAction": "Unblock",
+  "deviceBlockedSnack": "{name} has been blocked",
+  "deviceUnblockedSnack": "{name} has been unblocked"
 }

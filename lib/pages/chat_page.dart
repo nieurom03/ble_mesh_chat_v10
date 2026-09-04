@@ -58,7 +58,11 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
-      appBar: _ChatAppBar(peerName: widget.peerName, connected: connected),
+      appBar: _ChatAppBar(
+        ble: widget.ble,
+        peerName: widget.peerName,
+        connected: connected,
+      ),
       body: Column(
         children: [
           Expanded(
@@ -104,12 +108,56 @@ class _ChatPageState extends State<ChatPage> {
 // ── AppBar ────────────────────────────────────────────────────────────────────
 
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final BleChatV10Controller ble;
   final String peerName;
   final bool connected;
-  const _ChatAppBar({required this.peerName, required this.connected});
+  const _ChatAppBar({
+    required this.ble,
+    required this.peerName,
+    required this.connected,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  Future<void> _confirmBlock(BuildContext context) async {
+    final l = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        title: Text(l.blockConfirmTitle(peerName)),
+        content: Text(l.blockConfirmMessage(peerName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.editNameCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.red600),
+            child: Text(l.blockAction),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final targetId = ble.connectedNodeId ?? peerName;
+      await ble.blockNode(targetId, peerName);
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.deviceBlockedSnack(peerName)),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,17 +201,13 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                     margin: const EdgeInsets.only(right: 4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: connected
-                          ? AppColors.green500
-                          : AppColors.gray400,
+                      color: connected ? AppColors.green500 : AppColors.gray400,
                     ),
                   ),
                   Text(
                     connected ? l.chatConnected : l.chatDisconnected,
                     style: AppTextStyle.xs.copyWith(
-                      color: connected
-                          ? AppColors.green700
-                          : AppColors.gray400,
+                      color: connected ? AppColors.green700 : AppColors.gray400,
                     ),
                   ),
                 ],
@@ -172,6 +216,41 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
+      actions: [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert_rounded, color: AppColors.gray700),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          onSelected: (val) {
+            if (val == 'block') {
+              _confirmBlock(context);
+            }
+          },
+          itemBuilder: (ctx) => [
+            PopupMenuItem(
+              value: 'block',
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.block_rounded,
+                    size: 18,
+                    color: AppColors.red600,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l.blockDevice,
+                    style: const TextStyle(
+                      color: AppColors.red600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -202,8 +281,9 @@ class _MessageBubble extends StatelessWidget {
         right: mine ? 0 : 48,
       ),
       child: Row(
-        mainAxisAlignment:
-            mine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: mine
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!mine)
@@ -395,8 +475,7 @@ class _InputBar extends StatelessWidget {
                 onSubmitted: enabled ? (_) => onSend() : null,
                 style: AppTextStyle.base.copyWith(color: AppColors.gray900),
                 decoration: InputDecoration(
-                  hintText:
-                      enabled ? l.chatInputHint : l.chatInputDisabledHint,
+                  hintText: enabled ? l.chatInputHint : l.chatInputDisabledHint,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,

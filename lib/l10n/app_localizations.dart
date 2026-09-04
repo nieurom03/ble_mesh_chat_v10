@@ -588,6 +588,90 @@ abstract class AppL10n {
   /// In vi, this message translates to:
   /// **'Theo hệ thống'**
   String get langSystemDefault;
+
+  /// Privacy section header
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyền riêng tư & Bảo mật'**
+  String get settingsSectionPrivacy;
+
+  /// Blocked devices tile title
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách chặn'**
+  String get settingsBlockedDevices;
+
+  /// Blocked devices tile subtitle
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý thiết bị đã ẩn và tin nhắn bị chặn'**
+  String get settingsBlockedDevicesSub;
+
+  /// Blocked devices sheet title
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị đã chặn'**
+  String get blockedDevicesTitle;
+
+  /// Empty blocked devices title
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thiết bị nào bị chặn'**
+  String get blockedDevicesEmpty;
+
+  /// Empty blocked devices hint
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị bị chặn sẽ không xuất hiện khi quét và không thể gửi tin nhắn hoặc yêu cầu kết nối.'**
+  String get blockedDevicesEmptyHint;
+
+  /// Block device action
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn thiết bị'**
+  String get blockDevice;
+
+  /// Unblock device action
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ chặn'**
+  String get unblockDevice;
+
+  /// Block confirmation title
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn {name}?'**
+  String blockConfirmTitle(String name);
+
+  /// Block confirmation message
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn sẽ không nhìn thấy {name} trong danh sách mạng và không nhận tin nhắn hoặc yêu cầu kết nối từ thiết bị này.'**
+  String blockConfirmMessage(String name);
+
+  /// Block confirm button label
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn'**
+  String get blockAction;
+
+  /// Unblock confirm button label
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ chặn'**
+  String get unblockAction;
+
+  /// Snackbar after blocking a device
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chặn {name}'**
+  String deviceBlockedSnack(String name);
+
+  /// Snackbar after unblocking a device
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bỏ chặn {name}'**
+  String deviceUnblockedSnack(String name);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

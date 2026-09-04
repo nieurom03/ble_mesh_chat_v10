@@ -25,10 +25,7 @@ class CryptoService {
   }
 
   Future<EncryptedPayload> encrypt(String plaintext) async {
-    final box = await _aes.encrypt(
-      utf8.encode(plaintext),
-      secretKey: _key,
-    );
+    final box = await _aes.encrypt(utf8.encode(plaintext), secretKey: _key);
     final digest = await Sha256().hash(box.cipherText);
 
     return EncryptedPayload(

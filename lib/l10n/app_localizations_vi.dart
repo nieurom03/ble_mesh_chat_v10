@@ -267,4 +267,56 @@ class AppL10nVi extends AppL10n {
 
   @override
   String get langSystemDefault => 'Theo hệ thống';
+
+  @override
+  String get settingsSectionPrivacy => 'Quyền riêng tư & Bảo mật';
+
+  @override
+  String get settingsBlockedDevices => 'Danh sách chặn';
+
+  @override
+  String get settingsBlockedDevicesSub =>
+      'Quản lý thiết bị đã ẩn và tin nhắn bị chặn';
+
+  @override
+  String get blockedDevicesTitle => 'Thiết bị đã chặn';
+
+  @override
+  String get blockedDevicesEmpty => 'Chưa có thiết bị nào bị chặn';
+
+  @override
+  String get blockedDevicesEmptyHint =>
+      'Thiết bị bị chặn sẽ không xuất hiện khi quét và không thể gửi tin nhắn hoặc yêu cầu kết nối.';
+
+  @override
+  String get blockDevice => 'Chặn thiết bị';
+
+  @override
+  String get unblockDevice => 'Bỏ chặn';
+
+  @override
+  String blockConfirmTitle(String name) {
+    return 'Chặn $name?';
+  }
+
+  @override
+  String blockConfirmMessage(String name) {
+    return 'Bạn sẽ không nhìn thấy $name trong danh sách mạng và không nhận tin nhắn hoặc yêu cầu kết nối từ thiết bị này.';
+  }
+
+  @override
+  String get blockAction => 'Chặn';
+
+  @override
+  String get unblockAction => 'Bỏ chặn';
+
+  @override
+  String deviceBlockedSnack(String name) {
+    return 'Đã chặn $name';
+  }
+
+  @override
+  String deviceUnblockedSnack(String name) {
+    return 'Đã bỏ chặn $name';
+  }
 }

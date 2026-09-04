@@ -189,5 +189,46 @@
   "langEnglish": "English",
   "@langEnglish": { "description": "English language option" },
   "langSystemDefault": "Theo hệ thống",
-  "@langSystemDefault": { "description": "Follow system locale option" }
+  "@langSystemDefault": { "description": "Follow system locale option" },
+
+  "settingsSectionPrivacy": "Quyền riêng tư & Bảo mật",
+  "@settingsSectionPrivacy": { "description": "Privacy section header" },
+  "settingsBlockedDevices": "Danh sách chặn",
+  "@settingsBlockedDevices": { "description": "Blocked devices tile title" },
+  "settingsBlockedDevicesSub": "Quản lý thiết bị đã ẩn và tin nhắn bị chặn",
+  "@settingsBlockedDevicesSub": { "description": "Blocked devices tile subtitle" },
+  "blockedDevicesTitle": "Thiết bị đã chặn",
+  "@blockedDevicesTitle": { "description": "Blocked devices sheet title" },
+  "blockedDevicesEmpty": "Chưa có thiết bị nào bị chặn",
+  "@blockedDevicesEmpty": { "description": "Empty blocked devices title" },
+  "blockedDevicesEmptyHint": "Thiết bị bị chặn sẽ không xuất hiện khi quét và không thể gửi tin nhắn hoặc yêu cầu kết nối.",
+  "@blockedDevicesEmptyHint": { "description": "Empty blocked devices hint" },
+  "blockDevice": "Chặn thiết bị",
+  "@blockDevice": { "description": "Block device action" },
+  "unblockDevice": "Bỏ chặn",
+  "@unblockDevice": { "description": "Unblock device action" },
+  "blockConfirmTitle": "Chặn {name}?",
+  "@blockConfirmTitle": {
+    "description": "Block confirmation title",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "blockConfirmMessage": "Bạn sẽ không nhìn thấy {name} trong danh sách mạng và không nhận tin nhắn hoặc yêu cầu kết nối từ thiết bị này.",
+  "@blockConfirmMessage": {
+    "description": "Block confirmation message",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "blockAction": "Chặn",
+  "@blockAction": { "description": "Block confirm button label" },
+  "unblockAction": "Bỏ chặn",
+  "@unblockAction": { "description": "Unblock confirm button label" },
+  "deviceBlockedSnack": "Đã chặn {name}",
+  "@deviceBlockedSnack": {
+    "description": "Snackbar after blocking a device",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "deviceUnblockedSnack": "Đã bỏ chặn {name}",
+  "@deviceUnblockedSnack": {
+    "description": "Snackbar after unblocking a device",
+    "placeholders": { "name": { "type": "String" } }
+  }
 }

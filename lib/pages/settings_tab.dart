@@ -29,6 +29,9 @@ class SettingsTab extends StatelessWidget {
               _SectionLabel(label: l.settingsSectionBluetooth),
               _BleCard(ble: ble),
               const SizedBox(height: AppSpacing.lg),
+              _SectionLabel(label: l.settingsSectionPrivacy),
+              _PrivacyCard(ble: ble),
+              const SizedBox(height: AppSpacing.lg),
               _SectionLabel(label: l.settingsSectionLanguage),
               const _LanguageCard(),
               const SizedBox(height: AppSpacing.lg),
@@ -76,12 +79,14 @@ class _SettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.gray200),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (int i = 0; i < children.length; i++) ...[
             children[i],
@@ -117,54 +122,57 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm + 2,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: BorderRadius.circular(AppRadius.sm + 2),
+    return SizedBox(
+      width: double.infinity,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 2,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(AppRadius.sm + 2),
+                ),
+                child: Icon(icon, color: iconColor, size: 18),
               ),
-              child: Icon(icon, color: iconColor, size: 18),
-            ),
-            const SizedBox(width: AppSpacing.sm + 4),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyle.base.copyWith(
-                      color: AppColors.gray900,
-                      fontWeight: FontWeight.w500,
+              const SizedBox(width: AppSpacing.sm + 4),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyle.base.copyWith(
+                        color: AppColors.gray900,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 1),
-                    Text(subtitle!, style: AppTextStyle.bodyMuted),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 1),
+                      Text(subtitle!, style: AppTextStyle.bodyMuted),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            if (trailing != null) ...[
-              const SizedBox(width: AppSpacing.sm),
-              Flexible(fit: FlexFit.loose, child: trailing!),
-            ] else if (onTap != null)
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: AppColors.gray300,
-              ),
-          ],
+              if (trailing != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                trailing!,
+              ] else if (onTap != null)
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.gray300,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -265,19 +273,27 @@ class _BleCard extends StatelessWidget {
 
   Color _stateColor(String name) {
     switch (name) {
-      case 'poweredOn':  return AppColors.green500;
-      case 'poweredOff': return AppColors.gray400;
-      default:           return AppColors.amber700;
+      case 'poweredOn':
+        return AppColors.green500;
+      case 'poweredOff':
+        return AppColors.gray400;
+      default:
+        return AppColors.amber700;
     }
   }
 
   String _stateLabel(String name, AppL10n l) {
     switch (name) {
-      case 'poweredOn':    return l.btOn;
-      case 'poweredOff':   return l.btOff;
-      case 'unauthorized': return l.btUnauthorized;
-      case 'unsupported':  return l.btUnsupported;
-      default:             return name;
+      case 'poweredOn':
+        return l.btOn;
+      case 'poweredOff':
+        return l.btOff;
+      case 'unauthorized':
+        return l.btUnauthorized;
+      case 'unsupported':
+        return l.btUnsupported;
+      default:
+        return name;
     }
   }
 
@@ -326,6 +342,7 @@ class _BleCard extends StatelessWidget {
           trailing: Switch.adaptive(
             value: ble.advertising,
             activeColor: AppColors.indigo600,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             onChanged: (val) async {
               if (val) {
                 await ble.startAdvertising();
@@ -342,7 +359,7 @@ class _BleCard extends StatelessWidget {
           title: l.settingsConnection,
           subtitle: ble.connected
               ? l.settingsConnectedWith(ble.connectedName ?? 'peer')
-              : l.settingsNotConnected,
+              : null,
           trailing: ble.connected
               ? TextButton(
                   onPressed: ble.disconnect,
@@ -351,13 +368,39 @@ class _BleCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
                     ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
                     l.settingsDisconnect,
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 )
-              : null,
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.gray400,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l.settingsNotConnected,
+                      style: AppTextStyle.sm.copyWith(
+                        color: AppColors.gray600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
         ),
       ],
     );
@@ -400,10 +443,7 @@ class _LanguageCardState extends State<_LanguageCard> {
     }
     if (!mounted) return;
     setState(() => _selected = langCode);
-    MeshChatApp.setLocale(
-      context,
-      langCode != null ? Locale(langCode) : null,
-    );
+    MeshChatApp.setLocale(context, langCode != null ? Locale(langCode) : null);
   }
 
   @override
@@ -411,9 +451,9 @@ class _LanguageCardState extends State<_LanguageCard> {
     final l = context.l10n;
 
     final options = [
-      (code: null,   label: l.langSystemDefault, flag: '🌐'),
-      (code: 'vi',   label: l.langVietnamese,    flag: '🇻🇳'),
-      (code: 'en',   label: l.langEnglish,       flag: '🇬🇧'),
+      (code: null, label: l.langSystemDefault, flag: '🌐'),
+      (code: 'vi', label: l.langVietnamese, flag: '🇻🇳'),
+      (code: 'en', label: l.langEnglish, flag: '🇬🇧'),
     ];
 
     return _SettingsCard(
@@ -438,9 +478,7 @@ class _LanguageCardState extends State<_LanguageCard> {
                     opt.label,
                     style: AppTextStyle.base.copyWith(
                       color: selected ? AppColors.indigo600 : AppColors.gray900,
-                      fontWeight: selected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),
                 ),
@@ -491,16 +529,267 @@ class _AboutCard extends StatelessWidget {
           iconColor: AppColors.indigo600,
           iconBg: AppColors.indigo50,
           title: l.settingsProtocol,
-          subtitle: l.settingsProtocolSub,
+          trailing: Text(
+            'BLE Mesh',
+            style: AppTextStyle.sm.copyWith(color: AppColors.gray400),
+          ),
         ),
         _SettingsTile(
           icon: Icons.lock_outline_rounded,
           iconColor: AppColors.green700,
           iconBg: AppColors.green100,
           title: l.settingsSecurity,
-          subtitle: l.settingsSecuritySub,
+          trailing: Text(
+            'Local BLE',
+            style: AppTextStyle.sm.copyWith(color: AppColors.gray400),
+          ),
         ),
       ],
+    );
+  }
+}
+
+// ── Privacy & Blocked Devices card ───────────────────────────────────────────
+
+class _PrivacyCard extends StatelessWidget {
+  final BleChatV10Controller ble;
+  const _PrivacyCard({required this.ble});
+
+  void _showBlockedSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _BlockedDevicesSheet(ble: ble),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final count = ble.blockedNodes.length;
+
+    return _SettingsCard(
+      children: [
+        _SettingsTile(
+          icon: Icons.block_rounded,
+          iconColor: AppColors.red600,
+          iconBg: AppColors.red100,
+          title: l.settingsBlockedDevices,
+          subtitle: l.settingsBlockedDevicesSub,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: count > 0 ? AppColors.red100 : AppColors.gray100,
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+                child: Text(
+                  '$count',
+                  style: AppTextStyle.xs.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: count > 0 ? AppColors.red700 : AppColors.gray600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: AppColors.gray300,
+              ),
+            ],
+          ),
+          onTap: () => _showBlockedSheet(context),
+        ),
+      ],
+    );
+  }
+}
+
+class _BlockedDevicesSheet extends StatelessWidget {
+  final BleChatV10Controller ble;
+  const _BlockedDevicesSheet({required this.ble});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+
+    return ListenableBuilder(
+      listenable: ble,
+      builder: (context, _) {
+        final blocked = ble.blockedNodes;
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+          ),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(
+                    top: AppSpacing.sm,
+                    bottom: AppSpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.gray300,
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Row(
+                  children: [
+                    Text(
+                      l.blockedDevicesTitle,
+                      style: AppTextStyle.lg.copyWith(
+                        color: AppColors.gray900,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: AppColors.gray500,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Body
+              if (blocked.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: AppColors.gray100,
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                        ),
+                        child: const Icon(
+                          Icons.shield_outlined,
+                          size: 28,
+                          color: AppColors.gray400,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l.blockedDevicesEmpty,
+                        style: AppTextStyle.semibold.copyWith(
+                          color: AppColors.gray800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l.blockedDevicesEmptyHint,
+                        style: AppTextStyle.bodyMuted,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    itemCount: blocked.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (ctx, i) {
+                      final node = blocked[i];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.red100,
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                          ),
+                          child: const Icon(
+                            Icons.block_rounded,
+                            color: AppColors.red600,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          node.name,
+                          style: AppTextStyle.base.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.gray900,
+                          ),
+                        ),
+                        subtitle: Text(
+                          node.id,
+                          style: AppTextStyle.xs.copyWith(
+                            color: AppColors.gray400,
+                            fontFamily: 'monospace',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: TextButton(
+                          onPressed: () async {
+                            await ble.unblockNode(node.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text(l.deviceUnblockedSnack(node.name)),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.indigo600,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                            ),
+                          ),
+                          child: Text(
+                            l.unblockAction,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

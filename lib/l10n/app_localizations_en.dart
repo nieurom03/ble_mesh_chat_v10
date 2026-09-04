@@ -267,4 +267,56 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get langSystemDefault => 'System default';
+
+  @override
+  String get settingsSectionPrivacy => 'Privacy & Security';
+
+  @override
+  String get settingsBlockedDevices => 'Blocked devices';
+
+  @override
+  String get settingsBlockedDevicesSub =>
+      'Manage hidden devices and blocked messages';
+
+  @override
+  String get blockedDevicesTitle => 'Blocked Devices';
+
+  @override
+  String get blockedDevicesEmpty => 'No blocked devices';
+
+  @override
+  String get blockedDevicesEmptyHint =>
+      'Blocked devices will not appear in scans and cannot send you messages or connection requests.';
+
+  @override
+  String get blockDevice => 'Block device';
+
+  @override
+  String get unblockDevice => 'Unblock';
+
+  @override
+  String blockConfirmTitle(String name) {
+    return 'Block $name?';
+  }
+
+  @override
+  String blockConfirmMessage(String name) {
+    return 'You will no longer see $name in the network list and will not receive any messages or connection requests.';
+  }
+
+  @override
+  String get blockAction => 'Block';
+
+  @override
+  String get unblockAction => 'Unblock';
+
+  @override
+  String deviceBlockedSnack(String name) {
+    return '$name has been blocked';
+  }
+
+  @override
+  String deviceUnblockedSnack(String name) {
+    return '$name has been unblocked';
+  }
 }

@@ -101,7 +101,11 @@ class _ScanButton extends StatelessWidget {
                 ),
               )
             else
-              const Icon(Icons.radar_rounded, size: 15, color: AppColors.indigo600),
+              const Icon(
+                Icons.radar_rounded,
+                size: 15,
+                color: AppColors.indigo600,
+              ),
             const SizedBox(width: 5),
             Text(
               scanning ? l.networkScanStop : l.networkScanStart,
@@ -246,16 +250,25 @@ class _PhoneCard extends StatelessWidget {
   final DiscoveredPhone phone;
   const _PhoneCard({required this.ble, required this.phone});
 
-  ({String label, Color color, Color bg}) _signal(
-    int rssi,
-    AppL10n l,
-  ) {
+  ({String label, Color color, Color bg}) _signal(int rssi, AppL10n l) {
     if (rssi >= -60) {
-      return (label: l.networkSignalStrong, color: AppColors.green700, bg: AppColors.green100);
+      return (
+        label: l.networkSignalStrong,
+        color: AppColors.green700,
+        bg: AppColors.green100,
+      );
     } else if (rssi >= -75) {
-      return (label: l.networkSignalMedium, color: AppColors.amber700, bg: AppColors.amber100);
+      return (
+        label: l.networkSignalMedium,
+        color: AppColors.amber700,
+        bg: AppColors.amber100,
+      );
     }
-    return (label: l.networkSignalWeak, color: AppColors.red700, bg: AppColors.red100);
+    return (
+      label: l.networkSignalWeak,
+      color: AppColors.red700,
+      bg: AppColors.red100,
+    );
   }
 
   @override
@@ -280,12 +293,16 @@ class _PhoneCard extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: phone.connected ? AppColors.indigo100 : AppColors.gray100,
+                color: phone.connected
+                    ? AppColors.indigo100
+                    : AppColors.gray100,
                 borderRadius: BorderRadius.circular(AppRadius.full),
               ),
               child: Icon(
                 Icons.smartphone_rounded,
-                color: phone.connected ? AppColors.indigo600 : AppColors.gray500,
+                color: phone.connected
+                    ? AppColors.indigo600
+                    : AppColors.gray500,
                 size: 24,
               ),
             ),
@@ -330,10 +347,87 @@ class _PhoneCard extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             _ActionButton(ble: ble, phone: phone),
+            const SizedBox(width: 2),
+            PopupMenuButton<String>(
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                size: 20,
+                color: AppColors.gray400,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              onSelected: (val) {
+                if (val == 'block') {
+                  _confirmBlock(context);
+                }
+              },
+              itemBuilder: (ctx) => [
+                PopupMenuItem(
+                  value: 'block',
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.block_rounded,
+                        size: 18,
+                        color: AppColors.red600,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l.blockDevice,
+                        style: const TextStyle(
+                          color: AppColors.red600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmBlock(BuildContext context) async {
+    final l = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        title: Text(l.blockConfirmTitle(phone.name)),
+        content: Text(l.blockConfirmMessage(phone.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.editNameCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.red600),
+            child: Text(l.blockAction),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ble.blockNode(phone.peripheral.uuid.toString(), phone.name);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.deviceBlockedSnack(phone.name)),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 }
 
